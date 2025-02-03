@@ -1,6 +1,7 @@
 package com.alertasmedicas.app.queue_consumer.service;
 
 import com.alertasmedicas.app.queue_consumer.dto.MeasurementDTO;
+import com.alertasmedicas.app.queue_consumer.util.JsonFileWriter;
 import com.alertasmedicas.app.queue_consumer.util.MessageParser;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -20,6 +21,9 @@ public class ConsumerService {
 
     private final RestTemplate restTemplate;
 
+    @Value("${file.path}")
+    private String filePath;
+
     @Value("${api.measurement:}")
     private String domain;
 
@@ -32,6 +36,13 @@ public class ConsumerService {
     public void receiveMessageAnomaly(String message) {
         log.info("Mensaje recibido cola anomaly: {}", message);
         saveAnomaly(message);
+    }
+
+    @RabbitListener(queues = "#{queueVitalsSigns}")
+    public void receiveMessageVitalsSigns(String message) {
+        log.info("Mensaje recibido cola vitals: {}", message);
+        JsonFileWriter.saveJsonToFile(message, filePath);
+        log.info("Json creado correctamente {}", filePath);
     }
 
     private void saveAnomaly(String message) {
